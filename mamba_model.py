@@ -1,5 +1,5 @@
-from tensorflow import keras
-from tensorflow.keras import layers, Model
+from keras import layers, Model
+import keras
 import tensorflow as tf
 from dataclasses import dataclass
 from einops import rearrange, repeat

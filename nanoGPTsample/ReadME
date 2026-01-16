@@ -1,24 +1,39 @@
 Information globale sur l'entrainement de nanoGPT:
 
-Premier Train : sans statistiques
+1er Train : sans statistiques
     dataset : cosmopedia-100k-v1,
     tokenizer : Byte-Level BPE
     Nb d'itération : 6000
 
-Deuxieme Train : sans statistiques
+2eme Train : sans statistiques
     dataset : cosmopedia-100k-v1
     tokenizer : Byte-Level BPE
-    Nb d'itéreration : 12000
+    Nb d'itéreration :
 
-Troisieme Train : avec statistiques
+3eme Train : avec statistiques
     dataset : cosmopedia-100k-v2
     tokenizer : Byte-Level BPE
-    Nb d'itéreration : 12000
+    Nb d'itéreration : 12000 + eval par palier de 2000
 
-Quatrieme Train : avec statistiques
+4eme Train : avec statistiques
     dataset : cosmopedia-100k-v3
     tokenizer : BERT
-    Nb d'itéreration : 12000
+    Nb d'itéreration : 12000 + eval par palier de 2000
+
+
+5eme Train : avec stats
+    dataset : cosmopedia-100k-v2
+    Tokenizer : Byte-Level BPE
+    Nb d'itération : 2200 + eval par palier de 200
+
+6eme Train : avec stats
+    dataset : cosmopedia-100k-v3
+    Tokenizer : BERT
+    Nb d'itération : 2200 + eval par palier de 200
+
+jusqu'au 6eme Train : 95%/5% Train/Val
+
+prochains ESSAIES : 85%/15% Train/Val
 
 #############################################################################################################################
 

@@ -91,7 +91,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, default='HuggingFaceTB/cosmopedia-100k')
     parser.add_argument('--config', type=str, default=None)
-    parser.add_argument('--tokenizer', type=str, default='gpt2')  # V1-V2:gpt2 / V3:bert-base-uncased
+    parser.add_argument('--tokenizer', type=str, default='gpt2')  # V1-V2:gpt2 / V3:bert-base-uncased / V4 unigram
     parser.add_argument('--output', type=str, default='data/cosmopedia-100k-v2')
     parser.add_argument('--max_train', type=int, default=None)
     parser.add_argument('--max_val', type=int, default=None)

@@ -8,7 +8,7 @@ Information globale sur l'entrainement de nanoGPT:
 2eme Train : sans statistiques
     dataset : cosmopedia-100k-v1
     tokenizer : Byte-Level BPE
-    Nb d'itéreration :
+    Nb d'itéreration : 12000
 
 3eme Train : avec statistiques
     dataset : cosmopedia-100k-v2
@@ -31,11 +31,16 @@ Information globale sur l'entrainement de nanoGPT:
     Tokenizer : BERT
     Nb d'itération : 2200 + eval par palier de 200
 
-jusqu'au 6eme Train : 95%/5% Train/Val
+7eme Train : avec stats
+    dataset : cosmopedia-100k-v4
+    Tokenizer : Unigram
+    Nb d'itération : 2200 + eval par palier de 200
+
+jusqu'au 7eme Train : 95%/5% Train/Val
 
 prochains ESSAIES : 85%/15% Train/Val
 
-#############################################################################################################################
+#######################################################################################################################
 
 Byte-Level BPE : Le tokenizer utilisé repose sur un algorithme de Byte-Level Byte Pair Encoding (BPE), identique à
   celui de GPT-2. Le texte est d’abord converti en séquences de bytes UTF-8, garantissant une couverture complète de
@@ -51,7 +56,8 @@ Available splits: ['train']
 Loading tokenizer: gpt2
 
 Tokenizing train split...
-indices sequence length is longer than the specified maximum sequence length for this model (1179 > 1024). Running this sequence through the model will result in indexing errors
+indices sequence length is longer than the specified maximum sequence length for this model (1179 > 1024). Running this
+ sequence through the model will result in indexing errors
 Tokenizing: 100%|███████| 100000/100000 [00:57<00:00, 1739.93it/s]
 Tokenized 100000 examples -> 33,730,894 tokens
 
@@ -64,15 +70,18 @@ Saved data/cosmopedia-100k-v2\train.bin (61.12 MB)
 Saved data/cosmopedia-100k-v2\val.bin (3.22 MB)
 Saved meta.pkl (vocab_size: 50257)
 
-#############################################################################################################################
+#######################################################################################################################
 
-BERT TOKENIZATION (WordPiece) : divise les mots en sous-mots intelligents. Si un mot n'existe pas dans le vocabulaire, il le découpe en parties plus petites qui existent (ex: "playing" → ["play", "##ing"]). Les ## indiquent une continuation.
+BERT TOKENIZATION (WordPiece) : divise les mots en sous-mots intelligents. Si un mot n'existe pas dans le vocabulaire,
+il le découpe en parties plus petites qui existent (ex: "playing" → ["play", "##ing"]). Les ## indiquent une
+continuation.
 
 taille du model = 108M
 
 -----Log tokenization-----
 Tokenizing train split...
-Token indices sequence length is longer than the specified maximum sequence length for this model (631 > 512). Running this sequence through the model will result in indexing errors
+Token indices sequence length is longer than the specified maximum sequence length for this model (631 > 512). Running
+this sequence through the model will result in indexing errors
 Tokenizing: 100%|███████| 100000/100000 [01:08<00:00, 1455.78it/s]
 Tokenized 100000 examples -> 32,533,372 tokens
 
@@ -84,3 +93,22 @@ Saving files...
 Saved data/cosmopedia-100k-v3/train.bin (58.95 MB)
 Saved data/cosmopedia-100k-v3/val.bin (3.10 MB)
 Saved meta.pkl (vocab_size: 30522)
+
+#######################################################################################################################
+
+Loading dataset: HuggingFaceTB/cosmopedia-100k
+Available splits: ['train']
+Loading tokenizer: xlnet-base-cased
+
+Tokenizing train split...
+Tokenizing: 100%|██████████| 100000/100000 [01:38<00:00, 1020.18it/s]
+Tokenized 100000 examples -> 34,594,304 tokens
+
+Splitting train/val...
+Train: 32,864,588 tokens
+Val: 1,729,716 tokens
+
+Saving files...
+Saved data/cosmopedia-100k-v4\train.bin (62.68 MB)
+Saved data/cosmopedia-100k-v4\val.bin (3.30 MB)
+Saved meta.pkl (vocab_size: 32000)

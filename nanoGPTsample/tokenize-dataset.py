@@ -37,8 +37,8 @@ def tokenize_split(dataset_split, tokenizer, max_samples=None):
 
         if text and len(text) > 0:
             try:
-                tokens = tokenizer.encode(text, add_special_tokens=False)  # V1 True, V2 False
-                MAX_DOC_TOKENS = 1024  # V1=None, V2=1024, V3=512(la limite de bert)
+                tokens = tokenizer.encode(text, add_special_tokens=False)  # V1:True, V2:False, V3:False, V4:False
+                MAX_DOC_TOKENS = 1024  # V1=None, V2=1024, V3=512(la limite de bert), V4:1024
                 tokens = tokens[:MAX_DOC_TOKENS]
                 if tokens:
                     all_tokens.extend(tokens)
@@ -91,8 +91,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', type=str, default='HuggingFaceTB/cosmopedia-100k')
     parser.add_argument('--config', type=str, default=None)
-    parser.add_argument('--tokenizer', type=str, default='gpt2')  # V1-V2:gpt2 / V3:bert-base-uncased / V4 unigram
-    parser.add_argument('--output', type=str, default='data/cosmopedia-100k-v2')
+    parser.add_argument('--tokenizer', type=str, default='xlnet-base-cased')  # V1-V2:gpt2 / V3:bert-base-uncased / V4:xlnet-base-cased
+    parser.add_argument('--output', type=str, default='data/cosmopedia-100k-v4')
     parser.add_argument('--max_train', type=int, default=None)
     parser.add_argument('--max_val', type=int, default=None)
     parser.add_argument('--val_split', type=float, default=0.05)

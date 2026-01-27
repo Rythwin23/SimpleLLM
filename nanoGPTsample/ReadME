@@ -100,6 +100,8 @@ Loading dataset: HuggingFaceTB/cosmopedia-100k
 Available splits: ['train']
 Loading tokenizer: xlnet-base-cased
 
+taille du model : 109M
+
 Tokenizing train split...
 Tokenizing: 100%|██████████| 100000/100000 [01:38<00:00, 1020.18it/s]
 Tokenized 100000 examples -> 34,594,304 tokens

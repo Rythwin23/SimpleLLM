@@ -2,7 +2,7 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 
-json_file = "./out-6/metrics.json"
+json_file = "./out-7/metrics.json"
 
 with open(json_file, 'r') as f:
     data = json.load(f)
@@ -51,5 +51,5 @@ ax4.grid(True, alpha=0.3, axis='y')
 ax4.axhline(y=0, color='black', linestyle='--', linewidth=1)
 
 plt.tight_layout()
-plt.savefig('metrics-BERT-2.2k.png', dpi=300, bbox_inches='tight')
+plt.savefig('metrics-Unigram-2.2k.png', dpi=300, bbox_inches='tight')
 plt.show()

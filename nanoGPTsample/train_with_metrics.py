@@ -43,7 +43,7 @@ n_embd = 768
 dropout = 0.0  # for pretraining 0 is good, for finetuning try 0.1+
 bias = False  # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
-learning_rate = 0.0004  # max learning rate
+learning_rate = 0.0005  # max learning rate
 max_iters = 2001  # total number of training iterations
 weight_decay = 1e-1
 beta1 = 0.9
@@ -53,7 +53,7 @@ grad_clip = 1.0  # clip gradients at this value, or disable if == 0.0
 decay_lr = True  # whether to decay the learning rate
 warmup_iters = 0  # how many steps to warm up for
 lr_decay_iters = 2001  # should be ~= max_iters per Chinchilla
-min_lr = 0.00004  # minimum learning rate, should be ~= learning_rate/10 per Chinchilla
+min_lr = 0.0001  # minimum learning rate, should be ~= learning_rate/10 per Chinchilla
 # DDP settings
 backend = 'nccl'  # 'nccl', 'gloo', etc.
 # system

@@ -40,6 +40,11 @@ jusqu'au 7eme Train : 95%/5% Train/Val
 
 prochains ESSAIES : 85%/15% Train/Val
 
+
+à partir du train 10:
+	Script de tokenization corrigé ( plusieurs erreurs lié au choix du tokenizeur
+	
+
 #######################################################################################################################
 
 Byte-Level BPE : Le tokenizer utilisé repose sur un algorithme de Byte-Level Byte Pair Encoding (BPE), identique à

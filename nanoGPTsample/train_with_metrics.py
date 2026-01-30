@@ -35,7 +35,7 @@ dataset = './data/cosmopedia-100k-v5'  # V2 BPE, V3 BERT, V4 Unigram
 
 gradient_accumulation_steps = 5 * 8  # used to simulate larger batch sizes
 batch_size = 16  # if gradient_accumulation_steps > 1, this is the micro-batch size   V1= 12, V2=16
-block_size = 1024
+block_size = 512  # 512 si bert-base-uncased ou xlnet-base-cased / 1024 si gpt2
 # model
 n_layer = 12
 n_head = 12

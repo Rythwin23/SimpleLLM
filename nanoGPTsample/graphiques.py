@@ -2,7 +2,7 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 
-json_file = "out-8/metrics.json"
+json_file = "out-10/metrics.json"
 name = json_file[:-5]
 
 with open(json_file, 'r') as f:

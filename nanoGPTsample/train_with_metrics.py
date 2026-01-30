@@ -18,7 +18,7 @@ from model import GPTConfig, GPT
 # -----------------------------------------------------------------------------
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
-out_dir = 'out-9'
+out_dir = 'out-10'
 eval_interval = 50
 log_interval = 1
 eval_iters = 50

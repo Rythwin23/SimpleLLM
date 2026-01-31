@@ -1,226 +1,180 @@
 import os
 import pickle
 import numpy as np
-from transformers import AutoTokenizer
 import argparse
 from tqdm import tqdm
 from datasets import load_dataset
 
 
-def get_text_field(example):
-    """Extrait le champ texte pertinent du dataset Cosmopedia"""
-    # Cosmopedia utilise principalement le champ 'text'
-    if 'text' in example and isinstance(example['text'], str) and example['text'].strip():
-        return example['text'].strip()
+def load_tokenizer(name):
+    # Charge un tokenizer et retourne un dict avec encode, eos_id, vocab_size
+    if name == "gpt2":
+        import tiktoken
+        enc = tiktoken.get_encoding("gpt2")
+        return {
+            "encode": lambda s: enc.encode(s, allowed_special={"<|endoftext|>"}),
+            "eos_id": enc.eot_token,
+            "vocab_size": enc.n_vocab,
+            "name": "gpt2"
+        }
+    else:
+        from transformers import AutoTokenizer
 
-    # Fallback sur d'autres champs possibles
-    for key in ['prompt', 'content', 'article']:
-        if key in example and isinstance(example[key], str) and example[key].strip():
-            return example[key].strip()
+        try:
+            tok = AutoTokenizer.from_pretrained(name)
+        except Exception as e:
+            raise ValueError(f"Failed to load tokenizer '{name}': {e}")
 
-    # Dernier recours : chercher n'importe quel champ string non vide
-    for key, value in example.items():
-        if isinstance(value, str) and value.strip():
-            return value.strip()
+        # Ensure pad token exists
+        if tok.pad_token is None:
+            tok.pad_token = tok.eos_token or tok.sep_token or tok.unk_token
 
+        # Determine EOS token ID with fallback
+        eos_id = tok.eos_token_id
+        if eos_id is None:
+            eos_id = tok.sep_token_id
+        if eos_id is None:
+            # Last resort: use 0 or vocab_size - 1
+            print(f"Warning: No EOS token found for {name}, using token ID 0")
+            eos_id = 0
+
+        return {
+            "encode": lambda s: tok.encode(s, add_special_tokens=False),
+            "eos_id": eos_id,
+            "vocab_size": len(tok),  # Plus fiable que tok.vocab_size
+            "name": name
+        }
+
+
+def get_text(example):
+    # Extrait le texte d'un exemple de dataset
+    # les clés de cosmopedia
+    for k in ["text"]:
+        if k in example and isinstance(example[k], str) and example[k].strip():
+            return example[k].strip()
     return ""
 
 
-def tokenize_split(dataset_split, tokenizer, max_samples=None):
-    all_tokens = []
+def tokenize_split(dataset, tokenizer, max_docs):
+    # Tokenize un dataset et retourne un array numpy
+    tokens = []
     count = 0
+    empty_docs = 0
 
-    # VÉRIFICATION CRITIQUE : EOS token doit exister
-    if tokenizer.eos_token_id is None:
-        raise ValueError(
-            f"Tokenizer '{tokenizer.name_or_path}' n'a pas de EOS token défini !\n"
-            f"  → Pour BERT: utiliser [SEP] (ID={tokenizer.sep_token_id})\n"
-            f"  → Pour XLNet: utiliser [EOS] (ID={tokenizer.eos_token_id if hasattr(tokenizer, 'eos_token_id') else 'N/A'})\n"
-            f"  → Recommandation: utiliser 'gpt2' ou configurer manuellement le tokenizer"
-        )
-
-    for example in tqdm(dataset_split, desc="Tokenizing"):
-        if max_samples and count >= max_samples:
+    for ex in tqdm(dataset, desc="Tokenizing"):
+        if max_docs and count >= max_docs:
             break
 
-        text = get_text_field(example)
+        text = get_text(ex)
         if not text:
+            empty_docs += 1
             continue
 
         try:
-            tokens = tokenizer.encode(text, add_special_tokens=False)
-
-            # Troncature adaptée à la capacité du tokenizer
-            MAX_DOC_TOKENS = tokenizer.model_max_length if hasattr(tokenizer, 'model_max_length') else 512
-            tokens = tokens[:MAX_DOC_TOKENS]
-
-            if tokens:
-                all_tokens.extend(tokens)
-                # Ajout sécurisé de l'EOS token (vérifié plus haut)
-                all_tokens.append(tokenizer.eos_token_id)
-                count += 1
-
+            ids = tokenizer["encode"](text)
         except Exception as e:
-            print(f"Erreur sur exemple {count}: {str(e)[:100]}")
+            print(f"Skipping doc {count}: tokenization error: {e}")
             continue
 
-    # DÉTECTION DE CORRUPTION : vérifier qu'aucun None n'est présent
-    if None in all_tokens:
-        raise RuntimeError(
-            "CORRUPTION DÉTECTÉE: tokens contiennent des valeurs None !\n"
-            "→ Cause probable: tokenizer.eos_token_id = None\n"
-            "→ Solution: configurer manuellement EOS token avant tokenization"
-        )
+        if ids:
+            tokens.extend(ids)
+            tokens.append(tokenizer["eos_id"])
+            count += 1
 
-    dtype = np.uint16 if tokenizer.vocab_size < 65536 else np.uint32
-    tokens_array = np.array(all_tokens, dtype=dtype)
+    if empty_docs > 0:
+        print(f"Skipped {empty_docs} empty documents")
 
-    print(f"Tokenized {count:,} examples → {len(tokens_array):,} tokens (dtype={dtype.__name__})")
-    print(f"Tokens uniques: {len(np.unique(tokens_array))}/{tokenizer.vocab_size}")
-    print(f"EOS token ID utilisé: {tokenizer.eos_token_id} ('{tokenizer.eos_token}')")
+    if not tokens:
+        raise ValueError("No tokens generated! Check your dataset.")
 
-    return tokens_array
-
-
-def split_train_val(tokens_array, val_split):
-    split_idx = int(len(tokens_array) * (1 - val_split))
-    train_tokens = tokens_array[:split_idx]
-    val_tokens = tokens_array[split_idx:]
-
-    print(f"Train: {len(train_tokens):,} tokens ({100 * (1 - val_split):.1f}%)")
-    print(f"Val:   {len(val_tokens):,} tokens ({100 * val_split:.1f}%)")
-
-    return train_tokens, val_tokens
-
-
-def save_tokens(tokens_array, output_path):
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    tokens_array.tofile(output_path)
-    size_mb = os.path.getsize(output_path) / (1024 * 1024)
-    print(f"✓ Saved {output_path} ({size_mb:.2f} MB)")
-
-
-def save_meta(tokenizer, output_dir):
-    meta = {
-        'vocab_size': tokenizer.vocab_size,
-        'eos_token_id': tokenizer.eos_token_id,
-        'eos_token': tokenizer.eos_token,
-        'pad_token_id': tokenizer.pad_token_id,
-        'pad_token': tokenizer.pad_token,
-        'tokenizer_name': tokenizer.name_or_path,
-        'model_max_length': getattr(tokenizer, 'model_max_length', None),
-    }
-    meta_path = os.path.join(output_dir, 'meta.pkl')
-    with open(meta_path, 'wb') as f:
-        pickle.dump(meta, f)
-
-    print(f"✓ Saved meta.pkl avec vocab_size={meta['vocab_size']}")
-
-
-def configure_tokenizer(tokenizer_name):
-    """Configure correctement le tokenizer avec EOS/PAD tokens"""
-    print(f" Chargement du tokenizer: {tokenizer_name}")
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
-
-    # CORRECTION CRITIQUE POUR BERT
-    if tokenizer.eos_token is None:
-        if tokenizer.sep_token is not None:
-            print(f" EOS token non défini → utilisation de [SEP] (ID={tokenizer.sep_token_id})")
-            tokenizer.eos_token = tokenizer.sep_token
-            tokenizer.eos_token_id = tokenizer.sep_token_id
-        elif tokenizer.cls_token is not None:
-            print(f" EOS token non défini → utilisation de [CLS] (ID={tokenizer.cls_token_id})")
-            tokenizer.eos_token = tokenizer.cls_token
-            tokenizer.eos_token_id = tokenizer.cls_token_id
-        else:
-            raise ValueError(f"Impossible de définir EOS token pour {tokenizer_name}")
-
-    # Configuration du PAD token
-    if tokenizer.pad_token is None:
-        print(f" PAD token non défini → utilisation de EOS (ID={tokenizer.eos_token_id})")
-        tokenizer.pad_token = tokenizer.eos_token
-        tokenizer.pad_token_id = tokenizer.eos_token_id
-
-    print(f"EOS token: '{tokenizer.eos_token}' (ID={tokenizer.eos_token_id})")
-    print(f"PAD token: '{tokenizer.pad_token}' (ID={tokenizer.pad_token_id})")
-    print(f"Vocab size: {tokenizer.vocab_size}")
-
-    return tokenizer
+    # Choisir le bon dtype
+    dtype = np.uint16 if tokenizer["vocab_size"] < 65536 else np.uint32
+    return np.array(tokens, dtype=dtype)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Tokenize Cosmopedia dataset for nanoGPT")
-    parser.add_argument('--dataset', type=str, default='HuggingFaceTB/cosmopedia-100k')
-    parser.add_argument('--config', type=str, default=None)
-    parser.add_argument('--tokenizer', type=str, default='bert-base-uncased',
-                        help="Tokenizer à utiliser (ex: 'gpt2', 'bert-base-uncased', 'xlnet-base-cased')")
-    parser.add_argument('--output', type=str, default='data/cosmopedia-100k-BertCorrect')
-    parser.add_argument('--max_train', type=int, default=None, help="Max examples pour train")
-    parser.add_argument('--max_val', type=int, default=None, help="Max examples pour val")
-    parser.add_argument('--val_split', type=float, default=0.15, help="Fraction pour validation")
+    parser = argparse.ArgumentParser(description="Tokenize datasets for LLM training")
+    parser.add_argument("--dataset", default="HuggingFaceTB/cosmopedia-100k",
+                        help="HuggingFace dataset name")
+    parser.add_argument("--tokenizer", default="bert-base-uncased",
+                        help="Tokenizer: gpt2 | bert-base-uncased | xlnet-base-cased | etc.")
+    parser.add_argument("--out", default="data/cosmopedia-100k-Unigram",
+                        help="Output directory")
+    parser.add_argument("--val_split", type=float, default=0.1,
+                        help="Validation split ratio (default: 0.05 = 5%)")
+    parser.add_argument("--max_docs", type=int, default=None,
+                        help="Max number of documents to process (for testing)")
+
     args = parser.parse_args()
 
-    # Configuration sécurisée du tokenizer
-    tokenizer = configure_tokenizer(args.tokenizer)
+    print("=" * 60)
+    print("TOKENIZATION CONFIGURATION")
+    print(f"Dataset: {args.dataset}")
+    print(f"Tokenizer: {args.tokenizer}")
+    print(f"Output: {args.out}")
+    print(f"Val split: {args.val_split * 100}%")
+    print(f"Max docs: {args.max_docs or 'All'}")
+    print("=" * 60)
 
-    # Chargement du dataset
-    print(f"\n Chargement du dataset: {args.dataset}")
-    dataset = load_dataset(args.dataset, args.config) if args.config else load_dataset(args.dataset)
-    print(f"✓ Splits disponibles: {list(dataset.keys())}")
+    # Load tokenizer
+    tokenizer = load_tokenizer(args.tokenizer)
+    print(f"\nTokenizer loaded: {tokenizer['name']}")
+    print(f"  - Vocab size: {tokenizer['vocab_size']:,}")
+    print(f"  - EOS token ID: {tokenizer['eos_id']}")
 
-    # Inspection rapide de la structure
-    sample = next(iter(dataset['train']))
-    print(f"✓ Champs disponibles: {list(sample.keys())}")
-    print(f"✓ Exemple de texte (premiers 100 chars): '{get_text_field(sample)[:100]}...'")
+    # Load dataset
+    print(f"\nLoading dataset: {args.dataset}...")
+    try:
+        dataset = load_dataset(args.dataset, split="train")
+    except Exception as e:
+        raise ValueError(f"Failed to load dataset: {e}")
 
-    os.makedirs(args.output, exist_ok=True)
+    print(f"✓ Dataset loaded: {len(dataset):,} examples")
 
-    # Tokenization selon la structure du dataset
-    if 'train' in dataset and 'validation' in dataset:
-        print("\n Tokenizing train split...")
-        train_tokens = tokenize_split(dataset['train'], tokenizer, args.max_train)
+    # Tokenize
+    print(f"\nTokenizing...")
+    all_tokens = tokenize_split(dataset, tokenizer, args.max_docs)
 
-        print("\n Tokenizing validation split...")
-        val_tokens = tokenize_split(dataset['validation'], tokenizer, args.max_val)
+    print(f"\nTokenization complete!")
+    print(f"  - Total tokens: {len(all_tokens):,}")
+    print(f"  - Size: {len(all_tokens) * all_tokens.itemsize / 1024 ** 2:.2f} MB")
 
-    elif 'train' in dataset:
-        print("\n Tokenizing full train split...")
-        train_tokens_full = tokenize_split(dataset['train'], tokenizer, args.max_train)
+    # Split train/val
+    split_idx = int(len(all_tokens) * (1 - args.val_split))
+    train_tokens = all_tokens[:split_idx]
+    val_tokens = all_tokens[split_idx:]
 
-        print("\n Splitting train/val...")
-        train_tokens, val_tokens = split_train_val(train_tokens_full, args.val_split)
+    print(f"\nSplit:")
+    print(f"  - Train: {len(train_tokens):,} tokens ({len(train_tokens) * train_tokens.itemsize / 1024 ** 2:.2f} MB)")
+    print(f"  - Val:   {len(val_tokens):,} tokens ({len(val_tokens) * val_tokens.itemsize / 1024 ** 2:.2f} MB)")
 
-    else:
-        splits = list(dataset.keys())
-        print(f"\n Tokenizing {splits[0]} split...")
-        train_tokens_full = tokenize_split(dataset[splits[0]], tokenizer)
+    # Save files
+    os.makedirs(args.out, exist_ok=True)
 
-        print("\n Splitting train/val...")
-        train_tokens, val_tokens = split_train_val(train_tokens_full, args.val_split)
+    train_path = os.path.join(args.out, "train.bin")
+    val_path = os.path.join(args.out, "val.bin")
+    meta_path = os.path.join(args.out, "meta.pkl")
 
-    # Sauvegarde
-    print("\n Sauvegarde des fichiers...")
-    save_tokens(train_tokens, os.path.join(args.output, 'train.bin'))
-    save_tokens(val_tokens, os.path.join(args.output, 'val.bin'))
-    save_meta(tokenizer, args.output)
+    train_tokens.tofile(train_path)
+    val_tokens.tofile(val_path)
 
-    # Vérification finale de corruption
-    print("\n Vérification de corruption des données...")
-    train_data = np.fromfile(os.path.join(args.output, 'train.bin'),
-                             dtype=np.uint16 if tokenizer.vocab_size < 65536 else np.uint32)
-    zeros_pct = np.sum(train_data == 0) / len(train_data) * 100
-    eos_count = np.sum(train_data == tokenizer.eos_token_id)
+    meta = {
+        "vocab_size": tokenizer["vocab_size"],
+        "eos_token_id": tokenizer["eos_id"],
+        "tokenizer": tokenizer["name"]
+    }
 
-    print(f"Tokens 0 détectés: {zeros_pct:.2f}% (normal si < 5%, suspect si > 10%)")
-    print(f"Tokens EOS détectés: {eos_count:,} ({eos_count / len(train_data) * 100:.2f}%)")
+    with open(meta_path, "wb") as f:
+        pickle.dump(meta, f)
 
-    if zeros_pct > 10.0:
-        print("ATTENTION: Taux élevé de tokens 0 → possible corruption des données !")
-        print("→ Vérifiez que tokenizer.eos_token_id n'était pas None pendant la tokenization")
-    else:
-        print("Dataset semble correct (taux de tokens 0 acceptable)")
+    print(f"\nFiles saved:")
+    print(f"  - {train_path}")
+    print(f"  - {val_path}")
+    print(f"  - {meta_path}")
 
-    print("\nTokenization terminée avec succès !")
+    print("\n" + "=" * 60)
+    print("TOKENIZATION COMPLETE")
+    print("=" * 60)
 
 
 if __name__ == "__main__":

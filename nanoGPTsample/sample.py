@@ -10,12 +10,12 @@ from model import GPTConfig, GPT
 
 # -----------------------------------------------------------------------------
 init_from = 'resume'
-out_dir = 'out-8'
-start = "Explain how neural networks learn from data."
+out_dir = 'out-12'
+start = "Machine learning is a field of computer science that focuses on algorithms that learn from data. Explain the basic training process step by step."
 num_samples = 5
-max_new_tokens = 400
+max_new_tokens = 300
 temperature = 0.85
-top_k = 200
+top_k = 50
 seed = 1337
 device = 'cuda:0'
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16'
@@ -34,7 +34,7 @@ ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=
 # model
 if init_from == 'resume':
     # 1. Charger le meta.pkl du dataset pour obtenir le vocab_size
-    meta_path = 'data/cosmopedia-100k-v5/meta.pkl'
+    meta_path = 'data/cosmopedia-100k-BertCorrect/meta.pkl'
     with open(meta_path, 'rb') as f:
         meta = pickle.load(f)
         vocab_size = meta['vocab_size']

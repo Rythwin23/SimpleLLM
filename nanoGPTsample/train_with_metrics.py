@@ -18,7 +18,7 @@ from model import GPTConfig, GPT
 # -----------------------------------------------------------------------------
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
-out_dir = 'out-12'
+out_dir = 'out-13'
 eval_interval = 50
 log_interval = 1
 eval_iters = 50
@@ -31,11 +31,11 @@ wandb_project = 'owt'
 wandb_run_name = 'gpt2'  # 'run' + str(time.time())
 
 # data
-dataset = './data/cosmopedia-100k-BertCorrect'
+dataset = './data/cosmopedia-100k-Bert'
 
 gradient_accumulation_steps = 5 * 8  # used to simulate larger batch sizes
 batch_size = 16  # if gradient_accumulation_steps > 1, this is the micro-batch size   V1= 12, V2=16
-block_size = 512  # 512 si bert-base-uncased ou xlnet-base-cased / 1024 si gpt2
+block_size = 1024
 # model
 n_layer = 12
 n_head = 12
@@ -43,7 +43,7 @@ n_embd = 768
 dropout = 0.0  # for pretraining 0 is good, for finetuning try 0.1+
 bias = False  # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
-learning_rate = 0.0006  # max learning rate
+learning_rate = 0.0007  # max learning rate
 max_iters = 3000  # total number of training iterations
 weight_decay = 1e-1
 beta1 = 0.9
@@ -53,13 +53,13 @@ grad_clip = 1.0  # clip gradients at this value, or disable if == 0.0
 decay_lr = True  # whether to decay the learning rate
 warmup_iters = 0  # how many steps to warm up for
 lr_decay_iters = 3000  # should be ~= max_iters per Chinchilla
-min_lr = 0.00009  # minimum learning rate, should be ~= learning_rate/10 per Chinchilla
+min_lr = 0.00007  # minimum learning rate, should be ~= learning_rate/10 per Chinchilla
 # DDP settings
 backend = 'nccl'  # 'nccl', 'gloo', etc.
 # system
-device = 'cuda'  # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1' etc., or try 'mps' on macbooks
+device = 'cuda:0'  # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1' etc., or try 'mps' on macbooks
 dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16'  # 'float32', 'bfloat16', or 'float16', the latter will auto implement a GradScaler
-compile = True  # use PyTorch 2.0 to compile the model to be faster
+compile = False  # use PyTorch 2.0 to compile the model to be faster
 # -----------------------------------------------------------------------------
 config_keys = [k for k, v in globals().items() if not k.startswith('_') and isinstance(v, (int, float, bool, str))]
 exec(open('configurator.py').read())  # overrides from command line or config file
@@ -150,6 +150,7 @@ if init_from == 'scratch':
         print("defaulting to vocab_size of GPT-2 to 50304 (50257 rounded up for efficiency)")
     model_args['vocab_size'] = meta_vocab_size if meta_vocab_size is not None else 50304
     gptconf = GPTConfig(**model_args)
+    print("model congig :\n", gptconf)
     model = GPT(gptconf)
 
 elif init_from == 'resume':

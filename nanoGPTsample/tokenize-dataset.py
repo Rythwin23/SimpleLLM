@@ -96,9 +96,9 @@ def main():
     parser = argparse.ArgumentParser(description="Tokenize datasets for LLM training")
     parser.add_argument("--dataset", default="HuggingFaceTB/cosmopedia-100k",
                         help="HuggingFace dataset name")
-    parser.add_argument("--tokenizer", default="bert-base-uncased",
+    parser.add_argument("--tokenizer", default="gpt2",
                         help="Tokenizer: gpt2 | bert-base-uncased | xlnet-base-cased | etc.")
-    parser.add_argument("--out", default="data/cosmopedia-100k-Unigram",
+    parser.add_argument("--out", default="data/cosmopedia-100k-BPE",
                         help="Output directory")
     parser.add_argument("--val_split", type=float, default=0.1,
                         help="Validation split ratio (default: 0.05 = 5%)")

@@ -31,7 +31,7 @@ wandb_project = 'owt'
 wandb_run_name = 'gpt2'  # 'run' + str(time.time())
 
 # data
-dataset = './data/cosmopedia-100k-Bert'
+dataset = './data/cosmopedia-100k-BPE'
 
 gradient_accumulation_steps = 5 * 8  # used to simulate larger batch sizes
 batch_size = 16  # if gradient_accumulation_steps > 1, this is the micro-batch size   V1= 12, V2=16

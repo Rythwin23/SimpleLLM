@@ -10,8 +10,8 @@ from model import GPTConfig, GPT
 
 # -----------------------------------------------------------------------------
 init_from = 'resume'
-out_dir = 'out-14'
-tokenizer = "GPT2"
+out_dir = 'out-12'
+tokenizer = "BERT"
 num_samples = 3
 max_new_tokens = 150
 temperature = 0.8

@@ -10,8 +10,8 @@ from model import GPTConfig, GPT
 
 # -----------------------------------------------------------------------------
 init_from = 'resume'
-out_dir = 'out-12'
-tokenizer = "BERT"
+out_dir = 'output/out-19'
+tokenizer = "BPE"
 num_samples = 3
 max_new_tokens = 150
 temperature = 0.8
@@ -59,7 +59,7 @@ if tokenizer == "BERT":  # BERT
     tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
     encode = lambda s: tokenizer.encode(s, add_special_tokens=False)
     decode = lambda l: tokenizer.decode(l, skip_special_tokens=True)
-elif tokenizer == "UNIGRAM":  # BERT
+elif tokenizer == "Unigram":  # Unigram
     print("Loading Unigram tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained('albert-base-v2')
     encode = lambda s: tokenizer.encode(s, add_special_tokens=False)

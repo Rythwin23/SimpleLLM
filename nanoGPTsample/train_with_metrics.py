@@ -18,7 +18,7 @@ from model import GPTConfig, GPT
 # -----------------------------------------------------------------------------
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
-out_dir = 'output/out-20'
+out_dir = 'output/out-21'
 eval_interval = 50
 log_interval = 1
 eval_iters = 50
@@ -31,7 +31,7 @@ wandb_project = 'owt'
 wandb_run_name = 'gpt2'  # 'run' + str(time.time())
 
 # data
-dataset = './data/cosmopedia-100k-BPE'
+dataset = './data/cosmopedia-100k-Unigram'
 
 gradient_accumulation_steps = 10  # used to simulate larger batch sizes
 batch_size = 16  # if gradient_accumulation_steps > 1, this is the micro-batch size
@@ -40,7 +40,7 @@ block_size = 1024
 n_layer = 10  # 12
 n_head = 10  # 12
 n_embd = 640  # 768
-dropout = 0.10  # for pretraining 0 is good, for finetuning try 0.1+
+dropout = 0.1  # for pretraining 0 is good, for finetuning try 0.1+
 bias = False  # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
 learning_rate = 0.0006  # max learning rate

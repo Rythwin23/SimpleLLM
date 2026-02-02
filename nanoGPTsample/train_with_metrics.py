@@ -18,7 +18,7 @@ from model import GPTConfig, GPT
 # -----------------------------------------------------------------------------
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
-out_dir = 'output/out-21'
+out_dir = 'output/out-22'
 eval_interval = 50
 log_interval = 1
 eval_iters = 50
@@ -31,7 +31,7 @@ wandb_project = 'owt'
 wandb_run_name = 'gpt2'  # 'run' + str(time.time())
 
 # data
-dataset = './data/cosmopedia-100k-Unigram'
+dataset = './data/cosmopedia-100k-BERT'
 
 gradient_accumulation_steps = 10  # used to simulate larger batch sizes
 batch_size = 16  # if gradient_accumulation_steps > 1, this is the micro-batch size

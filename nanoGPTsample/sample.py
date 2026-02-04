@@ -10,11 +10,11 @@ from model import GPTConfig, GPT
 
 # -----------------------------------------------------------------------------
 init_from = 'resume'
-out_dir = 'output/out-19'
-tokenizer = "BPE"
+out_dir = 'output/out-22'
+tokenizer = "BERT"
 num_samples = 3
 max_new_tokens = 150
-temperature = 0.8
+temperature = 0.82
 top_k = 100
 seed = 1337
 device = 'cuda:0'

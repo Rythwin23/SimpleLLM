@@ -33,8 +33,8 @@ wandb_run_name = 'gpt2'  # 'run' + str(time.time())
 # data
 dataset = './data/cosmopedia-100k-Unigram'
 
-gradient_accumulation_steps = 10  # used to simulate larger batch sizes
-batch_size = 32  # if gradient_accumulation_steps > 1, this is the micro-batch size
+gradient_accumulation_steps = 5  # used to simulate larger batch sizes
+batch_size = 16  # if gradient_accumulation_steps > 1, this is the micro-batch size
 block_size = 512
 # model
 n_layer = 8  # 12
@@ -44,15 +44,15 @@ dropout = 0.05  # for pretraining 0 is good, for finetuning try 0.1+
 bias = False  # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
 learning_rate = 0.001  # max learning rate
-max_iters = 5000  # total number of training iterations
+max_iters = 8000  # total number of training iterations
 weight_decay = 1e-1
 beta1 = 0.9
 beta2 = 0.95
 grad_clip = 1.0  # clip gradients at this value, or disable if == 0.0
 # learning rate decay settings
 decay_lr = True  # whether to decay the learning rate
-warmup_iters = 500  # how many steps to warm up for
-lr_decay_iters = 5000  # should be ~= max_iters per Chinchilla
+warmup_iters = 800  # how many steps to warm up for
+lr_decay_iters = 8000  # should be ~= max_iters per Chinchilla
 min_lr = 0.0001  # minimum learning rate, should be ~= learning_rate/10 per Chinchilla
 # DDP settings
 backend = 'nccl'  # 'nccl', 'gloo', etc.

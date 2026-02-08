@@ -33,14 +33,14 @@ wandb_run_name = 'gpt2'  # 'run' + str(time.time())
 # data
 dataset = './data/cosmopedia-100k-Unigram'
 
-gradient_accumulation_steps = 5  # used to simulate larger batch sizes
-batch_size = 16  # if gradient_accumulation_steps > 1, this is the micro-batch size
+gradient_accumulation_steps = 10  # used to simulate larger batch sizes
+batch_size = 32  # if gradient_accumulation_steps > 1, this is the micro-batch size
 block_size = 512
 # model
 n_layer = 8  # 12
 n_head = 8  # 12
 n_embd = 512  # 768
-dropout = 0  # for pretraining 0 is good, for finetuning try 0.1+
+dropout = 0.05  # for pretraining 0 is good, for finetuning try 0.1+
 bias = False  # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
 learning_rate = 0.001  # max learning rate

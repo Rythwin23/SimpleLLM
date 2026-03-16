@@ -10,7 +10,7 @@ from model import GPTConfig, GPT
 
 # -----------------------------------------------------------------------------
 init_from = 'resume'
-out_dir = 'output/out-23'
+out_dir = 'output/out-24'
 tokenizer = "Unigram"
 num_samples = 3
 max_new_tokens = 150
